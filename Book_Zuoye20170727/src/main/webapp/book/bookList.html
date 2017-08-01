@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>bookList_zuoye20170727</title>
+</head>
+<body>
+<div id="div01">
+    <form id="infoForm">
+        <label>书名</label><input v-model="book.name"><br/>
+        <label>作者</label><input v-model="book.author"><br/>
+        <label>出版社</label><input v-model="book.publisher"><br/>
+        <label>出版日期</label><input v-model="book.pubDate" type="date"><br/>
+        <label>售价</label><input v-model="book.price"><br/>
+        <label>折扣</label><input v-model="book.discount"><br/>
+        <button @click="save" type="button">登记</button>
+    </form>
+</div>
+<div id="div02">
+    <div>
+        <input placeholder="请输入书名关键字" v-model="qo.name">
+    </div>
+    <div>
+        <input placeholder="请输入价格范围最小值" v-model="qo.priceMin">
+    </div>
+    <div>
+        <input placeholder="请输入价格范围最大值" v-model="qo.priceMax">
+    </div>
+    <div>
+        <button @click="search">查询</button>
+        <button @click="clear">重置</button>
+    </div>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>书名</th>
+                <th>作者</th>
+                <th>出版社</th>
+                <th>出版日期</th>
+                <th>价格</th>
+                <th>折扣</th>
+                <th>入库时间</th>
+                <td><input id="selectAll" type="checkbox" @change="selectAll">全选</td>
+            </tr>
+        </thead>
+        <tbody id="result">
+        <tr v-for="b in books">
+            <td>{{b.id}}</td>
+            <td class="editable">{{b.name}}</td>
+            <td class="editable">{{b.author}}</td>
+            <td class="editable">{{b.publisher}}</td>
+            <td class="editable">{{b.pubDate}}</td>
+            <td class="editable">{{b.price}}</td>
+            <td class="editable">{{b.discount}}</td>
+            <td>{{b.creatTime}}</td>
+            <td><input type="checkbox" v-model="checkedBooks" :value="b.id">{{b.id}}</td>
+        </tr>
+        </tbody>
+    </table>
+    <div>
+        已选中ID：{{checkedBooks}}
+    </div>
+    <div>
+        <button @click="deleteBooks">删除</button>
+    </div>
+    <!-- 勾选可编辑模式，表格中允许用户编辑的单元格变为可编辑；
+         产生修改的内容颜色变化；
+         批量保存-->
+    <div>
+        <input type="checkbox" v-model="editable" @change="editBooks">
+        <label>{{editable?"退出可编辑模式并保存":"进入可编辑模式"}}</label>
+    </div>
+</div>
+
+<script src="/js/jquery-3.2.1.js"></script>
+<script src="/js/vue.js"></script>
+<script src="/js/axios.js"></script>
+<script>
+    var vm01 = new Vue({
+       el:'#div01',
+       data:{
+           book:{
+               discount:1.0
+           }
+       },
+       methods:{
+           save:function () {
+               console.log(this.book);
+               axios({
+                   method:"POST",
+                   url:'save.do',
+                   data:this.book
+               }).then(function (res) {
+                   console.log(res.data);
+                   alert("添加成功");
+                   vm02.search();
+               }).catch(function (err) {
+                   console.log(err);
+                   alert("添加失败");
+               });
+           }
+       }
+    });
+
+    var vm02 = new Vue({
+        el:'#div02',
+        data:{
+            qo:{
+
+            },
+            books:[
+
+            ],
+            checkedBooks:[],
+            editable:false,
+            booksForUpdate:[]
+        },
+        methods:{
+            search:function () {
+                console.log(this.qo);
+                axios({
+                    method:"POST",
+                    url:'selectNamePrice.do',
+                    data:this.qo
+                }).then(function (res) {
+                    vm02.books = res.data;
+                }).catch(function (err) {
+                    console.log(err);
+                });
+            },
+            clear:function () {
+                this.qo = {};
+            },
+            selectAll:function (event) {
+                var _this = event.target;
+                vm02.checkedBooks = [];
+                if(_this.checked){
+                    vm02.books.forEach(e=>{
+                        vm02.checkedBooks.push(e.id);
+                    })
+                }
+            },
+            deleteBooks:function () {
+                if(this.checkedBooks == []){
+                    alert("未选中任何数据");
+                }else{
+                    console.log(this.checkedBooks);
+                    axios({
+                        method:"POST",
+                        url:'deleteBooks.do',
+                        data:vm02.checkedBooks
+                    }).then(function (res) {
+                        alert("成功删除"+res.data+"条数据");
+                        vm02.search();
+                    }).catch(function (err) {
+                        alert("数据删除失败");
+                        console.log(err);
+                    });
+                }
+            },
+            editBooks:function (event) {
+                var _this = event.target;
+                if(_this.checked){
+                    $('.editable').attr("contentEditable",true);
+                    //TODO
+                }else {
+                    $('.editable').attr("contentEditable",false);
+                    //TODO
+                }
+            }
+        },
+        created:function () {
+            this.search();
+        }
+    });
+</script>
+</body>
+</html>
