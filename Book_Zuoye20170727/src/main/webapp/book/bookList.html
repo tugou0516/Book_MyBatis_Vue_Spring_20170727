@@ -161,7 +161,7 @@
             },
             editBooks:function (event) {
                 var _this = event.target;
-                var oldTds = [];
+                var oldTds = [];//用于二次确认取消后还原数据，因为没做二次确认所以暂时没用上
                 if(_this.checked){
                     $('.editable').attr("contentEditable",true);
                     var oldValue;
