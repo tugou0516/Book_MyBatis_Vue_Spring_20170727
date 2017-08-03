@@ -67,16 +67,19 @@ public class Book2Action {
 
     @RequestMapping("updateBooks")
     public @ResponseBody int updateBooks(@RequestBody List<Book2> list){
-        int i = 0;
-        try {
-            for(i = 0;i<list.size();i++){
-                bo.updateBook(list.get(i));
+        if(list.size()>0) {
+            int i = 0;
+            try {
+                for (i = 0; i < list.size(); i++) {
+                    bo.updateBook(list.get(i));
+                }
+                return i;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return 0;
             }
-            return i;
-        }catch (Exception e){
-            e.printStackTrace();
-            return 0;
+        }else {
+            return -1;
         }
-
     }
 }

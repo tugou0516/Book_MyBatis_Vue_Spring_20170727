@@ -204,18 +204,29 @@
                                 vm02.booksForUpdate.push(bForUpdate);
                             }
                         }
-                        $(this).removeAttr("bgcolor");
                     });
                     console.log(vm02.booksForUpdate);
-                    axios({
-                        method:"POST",
-                        url:'updateBooks.do',
-                        data:vm02.booksForUpdate
-                    }).then(function (res) {
-                        alert("成功更新"+res.data+"条数据");
-                    }).catch(function (err) {
-                        console.log(err);
-                        alert("批量更新失败");
+                    if($(vm02.booksForUpdate).length > 0){
+                        axios({
+                            method:"POST",
+                            url:'updateBooks.do',
+                            data:vm02.booksForUpdate
+                        }).then(function (res) {
+                            if(res.data>0){
+                                alert("成功更新" + res.data + "条数据");
+                            }else if(res.data==0){
+                                alert("更新失败");
+                            }else{
+                                alert("待更新的数据为空");
+                            }
+
+                        }).catch(function (err) {
+                            console.log(err);
+                            alert("批量更新失败:"+err);
+                        });
+                    }
+                    $('.editable').each(function () {
+                        $(this).removeAttr("bgcolor");
                     });
                 }
             }
