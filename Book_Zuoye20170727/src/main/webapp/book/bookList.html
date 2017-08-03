@@ -161,12 +161,62 @@
             },
             editBooks:function (event) {
                 var _this = event.target;
+                var oldTds = [];
                 if(_this.checked){
                     $('.editable').attr("contentEditable",true);
-                    //TODO
+                    var oldValue;
+                    $('.editable').focus(function () {
+                        oldValue = $(this).text();
+                        var thisId = $($(this).parent().children().get(0)).text();
+                        var oldTd = {thisId,oldValue};
+                        oldTds.push(oldTd);
+                        console.log(oldTd);
+                    });
+                    $('.editable').blur(function () {
+                        console.log($(this).text());
+                       if($(this).text() != oldValue){
+                           $(this).attr("bgcolor",'#ffe78c');
+                       }
+                    });
                 }else {
                     $('.editable').attr("contentEditable",false);
-                    //TODO
+                    $('.editable').each(function () {
+                        var a;
+                        if($(this).attr("bgcolor") != null){
+                            a = 0;
+                            var id = $($(this).parent().children().get(0)).text();
+                            for(var i = 0;i < vm02.booksForUpdate.length;i++){
+                                var bid = $(vm02.booksForUpdate).get(i).id;
+                                if(id == bid){
+                                    a = 1;
+                                }
+                            };
+                            if(a!=1){
+                                var name = $($(this).parent().children().get(1)).text();
+                                var author = $($(this).parent().children().get(2)).text();
+                                var publisher = $($(this).parent().children().get(3)).text();
+                                var pubDate = $($(this).parent().children().get(4)).text();
+                                var price = $($(this).parent().children().get(5)).text();
+                                var discount = $($(this).parent().children().get(6)).text();
+
+                                var bForUpdate = {id,name,author,publisher,pubDate,price,discount};
+                                console.log(bForUpdate);
+                                vm02.booksForUpdate.push(bForUpdate);
+                            }
+                        }
+                        $(this).removeAttr("bgcolor");
+                    });
+                    console.log(vm02.booksForUpdate);
+                    axios({
+                        method:"POST",
+                        url:'updateBooks.do',
+                        data:vm02.booksForUpdate
+                    }).then(function (res) {
+                        alert("成功更新"+res.data+"条数据");
+                    }).catch(function (err) {
+                        console.log(err);
+                        alert("批量更新失败");
+                    });
                 }
             }
         },
