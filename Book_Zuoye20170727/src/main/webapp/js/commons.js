@@ -1,6 +1,6 @@
 jQuery.fn.extend({
     // jQuery的表单数据转换为JSON的插件
-    // 使用语法：$('#form-id').form@Json();
+    // 使用语法：$('#form-id').form2Json();
     form2Json: function() {
         var formData = {};
         var inputs = this.serializeArray();

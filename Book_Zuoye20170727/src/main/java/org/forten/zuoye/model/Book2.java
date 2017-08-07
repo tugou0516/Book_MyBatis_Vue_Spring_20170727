@@ -1,6 +1,5 @@
 package org.forten.zuoye.model;
 
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 

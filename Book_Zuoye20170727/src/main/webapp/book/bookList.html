@@ -40,6 +40,7 @@
                 <th>出版日期</th>
                 <th>价格</th>
                 <th>折扣</th>
+                <th>折后价</th>
                 <th>入库时间</th>
                 <td><input id="selectAll" type="checkbox" @change="selectAll">全选</td>
             </tr>
@@ -50,10 +51,11 @@
             <td class="editable">{{b.name}}</td>
             <td class="editable">{{b.author}}</td>
             <td class="editable">{{b.publisher}}</td>
-            <td class="editable">{{b.pubDate}}</td>
+            <td class="editable">{{b.pubDate | dateTime}}</td>
             <td class="editable">{{b.price}}</td>
             <td class="editable">{{b.discount}}</td>
-            <td>{{b.creatTime}}</td>
+            <td :style="{color:'#ff7e00'}">{{(b.discount*b.price).toFixed(2)}}</td>
+            <td>{{b.creatTime | dateTime("yyyy-MM-dd HH:mm:ss")}}</td>
             <td><input type="checkbox" v-model="checkedBooks" :value="b.id">{{b.id}}</td>
         </tr>
         </tbody>
@@ -77,6 +79,41 @@
 <script src="/js/vue.js"></script>
 <script src="/js/axios.js"></script>
 <script>
+    $(function () {
+       Vue.filter('dateTime',function (value,partten) {
+           var dateTime = new Date(value);
+           Y = dateTime.getFullYear();
+           M = dateTime.getMonth()+1;
+           d = dateTime.getDate();
+           H = dateTime.getHours();
+           m = dateTime.getMinutes();
+           s = dateTime.getSeconds();
+           if(M<10){
+               M = "0"+M;
+           }
+           if(d<10){
+               d = "0"+d;
+           }
+           if(H<10){
+               H = "0"+H;
+           }
+           if(m<10){
+               m = "0"+m;
+           }
+           if(s<10){
+               s = "0"+s;
+           }
+           var t;
+           if(partten == "yyyy-MM-dd HH:mm:ss"){
+               t = Y+"-"+M+"-"+d+" "+H+":"+m+":"+s;
+               return t;
+           }else {
+               t = Y+"-"+M+"-"+d;
+               return t;
+           }
+
+       })
+    });
     var vm01 = new Vue({
        el:'#div01',
        data:{

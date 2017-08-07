@@ -14,10 +14,12 @@ public interface Book2Mapper {
 			@Result(property="publisher",column="publisher"),
 			@Result(property="price",column="price"),
 			@Result(property="pubDate",column="pub_date"),
+			@Result(property="creatTime",column="creat_time")
 	})
 	@Select("SELECT id,name,author,publisher,pub_date,price,discount,creat_time "
 			+ "FROM test_book2 WHERE id=#{id} ")
 	Book2 selectById(int id);
+
 
 	@Select("SELECT id,name,author,publisher,pub_date,price,discount,creat_time "
 			+ "FROM test_book2 ORDER BY id ")
@@ -46,6 +48,7 @@ public interface Book2Mapper {
 			@Result(property="publisher",column="publisher"),
 			@Result(property="price",column="price"),
 			@Result(property="pubDate",column="pub_date"),
+			@Result(property="creatTime",column="creat_time")
 	})
 	@SelectProvider(type=Book2NameAndPriceQo.class, method="getSql")
 	List<Book2> selectByNameAndPrice(Book2NameAndPriceQo qo);
