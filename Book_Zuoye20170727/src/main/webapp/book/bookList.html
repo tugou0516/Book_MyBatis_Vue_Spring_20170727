@@ -66,15 +66,14 @@
     <div>
         <button @click="deleteBooks">删除</button>
     </div>
-    <!-- 勾选可编辑模式，表格中允许用户编辑的单元格变为可编辑；
-         产生修改的内容颜色变化；
-         批量保存-->
     <div>
         <input type="checkbox" v-model="editable" @change="editBooks">
         <label>{{editable?"退出可编辑模式并保存":"进入可编辑模式"}}</label>
     </div>
 </div>
-
+<!-- 1.勾选可编辑模式，表格中允许用户编辑的单元格变为可编辑；
+         2.产生修改的内容颜色变化；
+         3.批量保存-->
 <script src="/js/jquery-3.2.1.js"></script>
 <script src="/js/vue.js"></script>
 <script src="/js/axios.js"></script>
@@ -129,7 +128,7 @@
                    url:'save.do',
                    data:this.book
                }).then(function (res) {
-                   console.log(res.data);
+                   console.log(res.data.msg);
                    alert(res.data);
                    vm02.search();
                }).catch(function (err) {
@@ -143,15 +142,11 @@
     var vm02 = new Vue({
         el:'#div02',
         data:{
-            qo:{
-
-            },
-            books:[
-
-            ],
+            qo:{},
+            books:[],
             checkedBooks:[],
             editable:false,
-            booksForUpdate:[]
+            booksForUpdate:[]//批量更新的数据
         },
         methods:{
             search:function () {
@@ -198,68 +193,92 @@
             },
             editBooks:function (event) {
                 var _this = event.target;
-                var oldTds = [];//用于二次确认取消后还原数据，因为没做二次确认所以暂时没用上
                 if(_this.checked){
                     $('.editable').attr("contentEditable",true);
                     var oldValue;
                     $('.editable').focus(function () {
                         oldValue = $(this).text();
-                        var thisId = $($(this).parent().children().get(0)).text();
-                        var oldTd = {thisId,oldValue};
-                        oldTds.push(oldTd);
-                        console.log(oldTd);
                     });
                     $('.editable').blur(function () {
-                        console.log($(this).text());
                        if($(this).text() != oldValue){
                            $(this).attr("bgcolor",'#ffe78c');
+                           console.log($(this).text()+"//修改后的内容");
                        }
                     });
                 }else {
                     $('.editable').attr("contentEditable",false);
-                    $('.editable').each(function () {
-                        var a;
-                        if($(this).attr("bgcolor") != null){
-                            a = 0;
-                            var id = $($(this).parent().children().get(0)).text();
-                            for(var i = 0;i < vm02.booksForUpdate.length;i++){
-                                var bid = $(vm02.booksForUpdate).get(i).id;
-                                if(id == bid){
-                                    a = 1;
+                    if(confirm("确认修改数据？")){
+                        $('.editable').each(function () {
+                            var a = true;
+                            if($(this).attr("bgcolor") != null){
+                                var id = $($(this).parent().children().get(0)).text();
+                                for(var i = 0;i < vm02.booksForUpdate.length;i++){
+                                    var bid = $(vm02.booksForUpdate).get(i).id;
+                                    if(id == bid){
+                                        a = false;
+                                    }
+                                };
+                                if(a){
+                                    var name = $($(this).parent().children().get(1)).text();
+                                    var author = $($(this).parent().children().get(2)).text();
+                                    var publisher = $($(this).parent().children().get(3)).text();
+                                    var pubDate = $($(this).parent().children().get(4)).text();
+                                    var price = $($(this).parent().children().get(5)).text();
+                                    var discount = $($(this).parent().children().get(6)).text();
+
+                                    var bForUpdate = {id,name,author,publisher,pubDate,price,discount};
+                                    console.log(bForUpdate);
+                                    vm02.booksForUpdate.push(bForUpdate);
                                 }
-                            };
-                            if(a!=1){
-                                var name = $($(this).parent().children().get(1)).text();
-                                var author = $($(this).parent().children().get(2)).text();
-                                var publisher = $($(this).parent().children().get(3)).text();
-                                var pubDate = $($(this).parent().children().get(4)).text();
-                                var price = $($(this).parent().children().get(5)).text();
-                                var discount = $($(this).parent().children().get(6)).text();
-
-                                var bForUpdate = {id,name,author,publisher,pubDate,price,discount};
-                                console.log(bForUpdate);
-                                vm02.booksForUpdate.push(bForUpdate);
                             }
+                        });
+                        console.log(vm02.booksForUpdate);
+                        if($(vm02.booksForUpdate).length > 0){
+                            axios({
+                                method:"POST",
+                                url:'updateBooks.do',
+                                data:vm02.booksForUpdate
+                            }).then(function (res) {
+                                if(res.data>0){
+                                    alert("成功更新" + res.data + "条数据");
+                                }else if(res.data==0){
+                                    alert("更新失败");
+                                }else{
+                                    alert("待更新的数据为空");
+                                }
+
+                            }).catch(function (err) {
+                                console.log(err);
+                                alert("批量更新失败:"+err);
+                            });
                         }
-                    });
-                    console.log(vm02.booksForUpdate);
-                    if($(vm02.booksForUpdate).length > 0){
-                        axios({
-                            method:"POST",
-                            url:'updateBooks.do',
-                            data:vm02.booksForUpdate
-                        }).then(function (res) {
-                            if(res.data>0){
-                                alert("成功更新" + res.data + "条数据");
-                            }else if(res.data==0){
-                                alert("更新失败");
-                            }else{
-                                alert("待更新的数据为空");
+                    }else {
+                        //因为checkbox触发机制的原因，调用this.search()刷新后单元格内容不能即时更新
+                        //因此使用以下方法手动更新单元格内容
+                        //如果是使用button等其他元素触发函数，则可直接调用search()刷新数据
+                        //但比起目前的方法会增加一次数据库查询
+                        $('.editable').each(function () {
+                            if($(this).attr("bgcolor") != null) {
+                                var thisTr = $(this).parent();
+                                var thisId = $(thisTr.children().get(0)).text();
+                                for (var i = 0; i < vm02.books.length; i++) {
+                                    var bId = $(vm02.books).get(i).id;
+                                    if (thisId == bId) {
+                                        var bName = $(vm02.books).get(i).name;
+                                        var bAuthor = $(vm02.books).get(i).author;
+                                        var bPub = $(vm02.books).get(i).publisher;
+                                        var bPubDate = $(vm02.books).get(i).pubDate;
+                                        var bPrice = $(vm02.books).get(i).price;
+                                        var bDis = $(vm02.books).get(i).discount;
+                                        $(thisTr.children().get(1)).text(bName);
+                                        $(thisTr.children().get(2)).text(bAuthor);
+                                        $(thisTr.children().get(3)).text(bPub);
+                                        $(thisTr.children().get(4)).text(bPubDate);
+                                        $(thisTr.children().get(5)).text(bPrice);
+                                        $(thisTr.children().get(6)).text(bDis);
+                                    }
+                                }
                             }
-
-                        }).catch(function (err) {
-                            console.log(err);
-                            alert("批量更新失败:"+err);
                         });
                     }
                     $('.editable').each(function () {
