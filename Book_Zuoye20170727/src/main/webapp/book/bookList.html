@@ -130,11 +130,11 @@
                    data:this.book
                }).then(function (res) {
                    console.log(res.data);
-                   alert("添加成功");
+                   alert(res.data);
                    vm02.search();
                }).catch(function (err) {
                    console.log(err);
-                   alert("添加失败");
+                   alert("添加失败："+err);
                });
            }
        }
